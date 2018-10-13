@@ -25,6 +25,7 @@ function load_image(e) {
             image.onload = function(e) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(image, 0, 0);
+
             };
         };
         fileReader.readAsDataURL(files[0]);
@@ -51,14 +52,15 @@ function drawRect(coords, name = 'Mihai', fill = true) {
 }
 
 function makeDetectRequest(imageData) {
+    var arr = { 'url' : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTB3sOp9I6lHGav-D69lOwDzVlbjZJDR0jDqwpfl8tbi3sb5VLZ'};
     $.ajax({
         type: 'POST',
         url: 'https://northeurope.api.cognitive.microsoft.com/face/v1.0/detect',
-        contentType: 'application/octet-stream',
+        contentType: 'application/json',
         headers: {
             'Ocp-Apim-Subscription-Key': '512f1b0661904e25918896ee76b0f417'
         },
-        data: '{"url": ' + '"' + imageData + '"}',
+        data: JSON.stringify(arr),
         success: function(data) {
             console.log(data);
         },
