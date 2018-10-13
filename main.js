@@ -71,6 +71,10 @@ function drawRect(coords, name = 'Mihai', fill = false) {
 }
 
 function makeDetectRequest(imageData) {
+    var arr = {
+        url:
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTB3sOp9I6lHGav-D69lOwDzVlbjZJDR0jDqwpfl8tbi3sb5VLZ'
+    };
     $.ajax({
         type: 'POST',
         url: 'https://northeurope.api.cognitive.microsoft.com/face/v1.0/detect',
