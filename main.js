@@ -4,7 +4,7 @@ window.onload = function() {
 
     button = document.getElementById('draw');
     button.addEventListener('click', function(e) {
-        drawRect([20, 20, 200, 200], true);
+        drawRect([20, 200, 200, 200], 'Mihai', false);
     });
 };
 
@@ -21,6 +21,7 @@ function load_image(e) {
             image = new Image();
             image.src = fileReader.result;
             image.onload = function(e) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(image, 0, 0);
             };
         };
@@ -28,16 +29,20 @@ function load_image(e) {
     }
 }
 
-function drawRect(coords, fill = true) {
+function drawRect(coords, name = 'Mihai', fill = true) {
     canvas = document.getElementById('image_canvas');
     ctx = canvas.getContext('2d');
-    //ctx.rect(Object.values(coords));
-    ctx.rect(...coords);
+
     if (fill) {
         ctx.fillStyle = 'red';
         ctx.fillRect(...coords);
+    } else {
+        ctx.rect(...coords);
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'red';
+        ctx.fillText(name, coords[0] + coords[2] / 3, coords[1] - 5);
     }
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 3;
-    ctx.stroke();
 }
