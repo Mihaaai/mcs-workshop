@@ -1,10 +1,11 @@
 const FACES = {};
+
 window.onload = function() {
     input = document.getElementById('image_input');
     input.addEventListener('change', load_image);
 };
 
-makeblob = function(dataURL) {
+function makeBlob(dataURL) {
     var BASE64_MARKER = ';base64,';
     if (dataURL.indexOf(BASE64_MARKER) == -1) {
         var parts = dataURL.split(',');
@@ -24,7 +25,7 @@ makeblob = function(dataURL) {
     }
 
     return new Blob([uInt8Array], { type: contentType });
-};
+}
 
 function load_image(e) {
     var target = e.target;
@@ -32,13 +33,17 @@ function load_image(e) {
     var canvas = document.getElementById('image_canvas');
     var ctx = canvas.getContext('2d');
 
-    // FileReader support
     if (files && files.length) {
         var fileReader = new FileReader();
         fileReader.onload = function() {
-            makeDetectRequest(fileReader.result);
             image = new Image();
             image.src = fileReader.result;
+
+            fileReader.onload = function() {
+                makeDetectRequest(fileReader.result);
+            };
+            /* Read image as array buffer in order to make detect request */
+            fileReader.readAsArrayBuffer(files[0]);
 
             image.onload = function(e) {
                 canvas.width = image.width;
@@ -47,7 +52,7 @@ function load_image(e) {
                 ctx.drawImage(image, 0, 0);
             };
         };
-        //fileReader.readAsBinaryString(files[0]);
+        /* Read image src */
         fileReader.readAsDataURL(files[0]);
     }
 }
@@ -66,7 +71,7 @@ function drawRect(coords, name = 'Mihai', fill = false) {
         ctx.stroke();
         ctx.font = '20px Arial';
         ctx.fillStyle = 'red';
-        ctx.fillText(name, coords[0] + coords[2] / 3, coords[1] - 5);
+        ctx.fillText(name, coords[0], coords[1] - 5);
     }
 }
 
@@ -83,7 +88,7 @@ function makeDetectRequest(imageData) {
         headers: {
             'Ocp-Apim-Subscription-Key': '512f1b0661904e25918896ee76b0f417'
         },
-        data: makeblob(imageData),
+        data: imageData,
         success: function(data) {
             faceIds = data.map(function(face) {
                 return face['faceId'];
@@ -101,7 +106,7 @@ function makeDetectRequest(imageData) {
             makeIdentify(faceIds);
         },
         error: function(error) {
-            alert(error);
+            alert(error['responseText']);
         }
     });
 }
@@ -111,12 +116,12 @@ function makeIdentify(faceIds) {
         faceids: faceIds,
         personGroupId: 0
     });
+
     $.ajax({
         type: 'POST',
         url:
             'https://northeurope.api.cognitive.microsoft.com/face/v1.0/identify',
         contentType: 'application/json',
-        processData: false,
         headers: {
             'Ocp-Apim-Subscription-Key': '512f1b0661904e25918896ee76b0f417'
         },
@@ -124,42 +129,38 @@ function makeIdentify(faceIds) {
         success: function(data) {
             console.log(data);
             for (var i = 0; i < data.length; i++) {
-                coords = FACES[data[i]['faceId']];
+                faceId = data[i]['faceId'];
+                coords = FACES[faceId];
                 candidates = data[i]['candidates'];
                 if (candidates.length) {
-                    max_conf = 0;
+                    maxConfidence = 0;
                     personId = candidates[0]['personId'];
 
                     for (var j = 1; j < candidates.length; j++) {
                         if (candidates[j]['confidence'] > max_conf) {
-                            max_conf = candidates[j]['confidences'];
-                            max_cand = candidates[j]['personId'];
+                            maxConfidence = candidates[j]['confidences'];
+                            personId = candidates[j]['personId'];
                         }
                     }
-                    getPerson(data[i]['faceId'], personId);
+                    getPerson(faceId, personId);
                 } else {
                     drawRect(coords, '', true);
                 }
             }
         },
         error: function(error) {
-            alert(error);
+            alert(error['responseText']);
         }
     });
 }
 
 function getPerson(faceId, personId) {
-    bodyData = JSON.stringify({
-        faceids: faceIds,
-        personGroupId: 0
-    });
     $.ajax({
         type: 'GET',
         url:
             'https://northeurope.api.cognitive.microsoft.com/face/v1.0/persongroups/0/persons/' +
             personId,
         contentType: 'application/json',
-        processData: false,
         headers: {
             'Ocp-Apim-Subscription-Key': '512f1b0661904e25918896ee76b0f417'
         },
@@ -168,7 +169,7 @@ function getPerson(faceId, personId) {
             drawRect(coords, data['name']);
         },
         error: function(error) {
-            alert(error);
+            alert(error['responseText']);
         }
     });
 }
